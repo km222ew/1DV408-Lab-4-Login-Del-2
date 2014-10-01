@@ -84,9 +84,24 @@ class AccountView {
 		}
 	}
 
-	//Redirect, to get rid of post
-	public function redirect() {
-		header('Location: ' . $_SERVER['PHP_SELF']);
+    public function goToRegister()
+    {
+        if(isset($_GET['action']) && $_GET['action'] == 'register')
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+	//Redirect, to get rid of post, changed to work with different pages
+	public function redirect($pageId) {
+
+		//header('Location: ' . $_SERVER['PHP_SELF']);
+
+        header("Location:$pageId");
 	}
 
 	//Page: login, page for logging in

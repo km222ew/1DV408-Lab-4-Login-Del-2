@@ -4,13 +4,17 @@
 class AccountController {
 
 	private $model;
+    private $registerModel;
 	private $view;
+    private $registerView;
 	private $username;
 	private $password;
 
-	public function __construct(AccountModel $model,AccountView $view) {
+	public function __construct(AccountModel $model,AccountRegisterModel $registerModel, AccountView $view, AccountRegisterView $registerView) {
 		$this->model = $model;
+        $this->registerModel = $registerModel;
 		$this->view = $view;
+        $this->registerView = $registerView;
 	}
 
 	//validate login
@@ -33,6 +37,33 @@ class AccountController {
 	}
 
 	public function index() {
+
+        //Did use press register
+        if($this->registerView->didRegister())
+        {
+            $username = $this->registerView->getUsername();
+            $password = $this->registerView->getPassword();
+            $repPassword = $this->registerView->getRepeatedPassword();
+
+            //Check if the inputs are valid
+            if($this->registerModel->validateRegister($username, $password, $repPassword))
+            {
+                //Get rid of post request
+                $this->view->redirect("index.php");
+                return $this->view->login();
+            }
+
+            //Get rid of post request
+            $this->view->redirect("?action=register");
+            return $this->registerView->register();
+        }
+
+        //Did user go to register page
+        if($this->view->goToRegister())
+        {
+            return $this->registerView->register();
+        }
+
 		//Did user click logout?
 		if ($this->view->didLogout()) {
 			//Log user out
@@ -42,7 +73,7 @@ class AccountController {
 		//Did user click login?
 		if ($this->view->didLogin()) {
 			//Get rid of post request
-			$this->view->redirect();
+			$this->view->redirect("index.php");
 
 			//Validate credentials (post)
 			if ($this->validateLogin()) {
