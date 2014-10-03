@@ -3,20 +3,16 @@
 class AccountRegisterView
 {
     private $cookieService;
-    private $registerModel;
 
-
-    public function __construct(CookieService $cookieService, AccountRegisterModel $registerModel)
+    public function __construct(CookieService $cookieService)
     {
         $this->cookieService = $cookieService;
-        $this->registerModel = $registerModel;
     }
 
     public function getUsername()
     {
         if(isset($_POST['regUsername']))
         {
-
             return trim($_POST['regUsername']);
         }
 
@@ -47,7 +43,7 @@ class AccountRegisterView
     {
         if(isset($_POST['register']))
         {
-            $this->cookieService->save('username', $this->getUsername());
+            $this->cookieService->save('inputUsername', $this->getUsername(), time()+60);
             return true;
         }
         else
@@ -58,13 +54,9 @@ class AccountRegisterView
 
     public function register() {
 
-        $username = $this->cookieService->load('username');
+        $username = $this->cookieService->load('inputUsername');
 
         $username = preg_replace('/[^a-zåäöA-ZÅÄÖ0-9]/', '', $username);
-
-
-
-
 
         $body = "
 				<h1>L2 - Login [kl222jy]</h1>

@@ -1,4 +1,6 @@
 Alla test går igenom.
 
+Test 2.3 : Meddelande står kvar.
+
 Dock kunde jag inte testa "Testfall 3.5: Misslyckad inloggning med manipulerad för gammal kaka" på
 den publika versionen då de har 30 dagar på förfallotid. Men när jag testade lokalt med mindre tid så funkar det.

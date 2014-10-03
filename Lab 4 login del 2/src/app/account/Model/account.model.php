@@ -1,114 +1,136 @@
 <?php
 
+require_once("account.repository.php");
+
 class AccountModel {
-	private $adminUsername;
-	private $adminPassword;
+
 	public $notifications;
-	private $notify;
-	private $accountDAL;
-	public $token;
 	public $tokenExpiration;
 
-	public function __construct(Notify $notify) {
+    private $notify;
+    private $token;
+
+	public function __construct(Notify $notify)
+    {
 		//Notifications notify->success/error/info(message, optional header)
 		$this->notify = $notify;
-		$username = 'Admin';
-		$password = 'Password';
-
-		$this->adminUsername = $username;
-		$this->adminPassword = crypt($password, $username);
-
-		$this->accountDAL = new AccountDAL();
+        $this->userRep = new AccountUserRepository();
 	}
 
-	public function getUsername() {
-		if (isset($_SESSION['username'])) {
+	public function getUsername()
+    {
+		if (isset($_SESSION['username']))
+        {
 			return $_SESSION['username'];
-		} else {
+		}
+        else
+        {
 			return '';
 		}
 	}
 
-	public function logout() {
+	public function logout()
+    {
 		session_destroy();
 		session_start();
 		$this->notify->info('Du är nu utloggad.');
 	}
 
 	//Is user already logged in?
-	public function IsLoggedIn($userAgent) {
-		if (!isset($_SESSION['username'])) {
+	public function IsLoggedIn($userAgent, $userIp)
+    {
+		if (!isset($_SESSION['username']))
+        {
 			return false;
 		}
 
 		$username = $_SESSION['username'];
-		if ($username == $this->adminUsername && $_SESSION['userAgent'] == $userAgent) {
-			return true;
-		} else {
-			return false;
-		}
+
+        $user = $this->userRep->getUserByName($username);
+
+        if($user != null && $_SESSION['userAgent'] == $userAgent && $_SESSION['userIp'] == $userIp)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
 	}
 
-	//Token validation, used for remembering users
-	public function validateToken($token, $userAgent) {
-		$result = $this->accountDAL->findRememberedUser($token);
-		if ($result != false) {
-			$_SESSION['username'] = $result;
-			$_SESSION['userAgent'] = $userAgent;
-			$this->notify->success('Inloggning lyckades via cookies.');
-			return true;
-		}
-		
-		$this->notify->error('Felaktig information i cookie.');
-		return false;
-	}
+    public function setSession($username, $userIp, $userAgent)
+    {
+        $_SESSION['username'] = $username;
+        $_SESSION['userIp'] = $userIp;
+        $_SESSION['userAgent'] = $userAgent;
+    }
 
 	//Validate credentials, used on login by post
-	public function validateCredentials($username, $password, $remember, $userAgent) {
-		if ($username == '') {
+	public function validateCredentials($username, $password, $userAgent, $userIp, $remember) {
+		if ($username == '')
+        {
 			$this->notify->error('Användarnamn saknas.');
 			return false;
 		}
 
-		if ($password == '') {
+		if ($password == '')
+        {
 			$this->notify->error('Lösenord saknas.');
 			return false;
 		}
 
-		if ($username != $this->adminUsername || $password != $this->adminPassword) {
-			$this->notify->error('Felaktigt användarnamn och/eller lösenord');
-			return false;
-		}
+        $user = $this->userRep->getUserByName($username);
 
-		//Remember user?
-		if ($remember == true) {
-			$this->rememberUser($username);
-			$this->notify->success('Inloggning lyckades och vi kommer ihåg dig nästa gång.');
-		} else {
-			$this->notify->success('Inloggning lyckades.');
-		}
+        if($user == null || $password != $user->getPassword())
+        {
+            $this->notify->error('Felaktigt användarnamn och/eller lösenord');
+            return false;
+        }
 
-		$_SESSION['username'] = $username;
+        if($remember)
+        {
+            $this->notify->success('Inloggning lyckades och vi kommer ihåg dig nästa gång.');
+        }
+        else
+        {
+            $this->notify->success('Inloggning lyckades.');
+        }
 
-		//Basic session stealing prevention (too basic)
-		$_SESSION['userAgent'] = $userAgent;
+        $this->setSession($username, $userIp, $userAgent);
+
 		return true;
 	}
 
-	//Remember user, saves token
-	private function rememberUser($username) {
-		//Set expiration to 30 days from now
-		$expiration = time()+60;
-		$token = $this->createToken($username, $expiration);
-		$this->accountDAL->rememberUser($token, $username, $expiration);
+    public function loginWithCookies($usernameCookie, $tokenPassCookie, $userIP, $userAgent)
+    {
+        $user = $this->userRep->getUserByName($usernameCookie);
 
-		//We'll need token and expiration in view
-		$this->token = $token;
-		$this->tokenExpiration = $expiration;
+        if($user != null && $user->getToken() == $tokenPassCookie && $user->getExpire() > time())
+        {
+            $this->setSession($usernameCookie, $userIP, $userAgent);
+
+            $this->notify->success('Inloggning lyckades via cookies');
+
+            return true;
+        }
+        else
+        {
+            $this->notify->error('Felaktig information i cookie');
+            return false;
+        }
+    }
+
+	//Saves token and cookie expiration
+	public function rememberUser($expiration, $username)
+    {
+        $this->userRep->updateUserIdentifier($this->token, $expiration, $username);
 	}
 
-	//Generate token
-	private function createToken($username, $expiration) {
-		return crypt($username, $expiration . 'secret string appended to make it harder to calculate');
-	}
+    //Generate, set, and return new token
+    public function getToken()
+    {
+        $this->token = sha1(rand().microtime());
+
+        return $this->token;
+    }
 }

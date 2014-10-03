@@ -5,65 +5,70 @@ class AccountView {
 	private $model;
 	public $cookieService;
 
+    public function __construct(AccountModel $model, CookieService $cookieService) {
+        $this->model = $model;
+        $this->cookieService = $cookieService;
+    }
+
 	//Get username from post
-	public function getUsername() {
-		if (isset($_POST['username'])) {
+	public function getUsername()
+    {
+		if (isset($_POST['username']))
+        {
 			//Save username in cookie to remember input
-			$this->cookieService->save('username', $_POST['username']);
-			return $_POST['username'];
+			$this->cookieService->save('inputUsername', $_POST['username'], time()+60);
+			return trim($_POST['username']);
 		}
 		
 		return '';
 	}
 
 	//Get password from post
-	public function getPassword() {
-		if (isset($_POST['password']) && $_POST['password'] != '') {
-			return $password = crypt($_POST['password'], $this->getUsername());
+	public function getPassword()
+    {
+		if (isset($_POST['password']) && $_POST['password'] != '')
+        {
+			return trim($_POST['password']);
+			//return $password = crypt($_POST['password'], $this->getUsername());
 		}
 
 		return '';
 	}
 
 	//Remember user?
-	public function getRemember() {
-		if (isset($_POST['remember'])) {
-			return $_POST['remember'];
+	public function getRemember()
+    {
+		if (isset($_POST['remember']))
+        {
+			//return $_POST['remember'];
+            return true;
 		} else {
 			return false;
 		}
 	}
 
-	//Remember user, sets cookie with token and expiration
-	public function remember() {
-		$token = $this->model->token;
-		$expiration = $this->model->tokenExpiration;
-		$this->cookieService->saveToken($token, $expiration);
-	}
+    //Get username stored in cookie
+    public function getUsernameCookie()
+    {
+        return $_COOKIE['username'];
+    }
 
-	//Get token from cookie
-	public function getToken() {
-		if ($this->cookieService->loadToken() != '') {
-			return $this->cookieService->loadToken();
-		} else {
-			return '';
-		}
-	}
-
-	//Remove token, remove on fail
-	public function removeToken() {
-		$this->cookieService->remove('token');
-	}
+    //Get token stored in cookie
+    public function getTokenPassCookie()
+    {
+        return $_COOKIE['tokenpass'];
+    }
 
 	//Get client browser info
 	public function getUserAgent() {
 		return $_SERVER['HTTP_USER_AGENT'];
 	}
 
-	public function __construct(AccountModel $model, CookieService $cookieService) {
-		$this->model = $model;
-		$this->cookieService = $cookieService;
-	}
+    //Get client ip
+    public function getUserIp()
+    {
+        return $_SERVER["REMOTE_ADDR"];
+    }
 
 	//Did user request login?
 	public function didLogin() {
@@ -75,9 +80,9 @@ class AccountView {
 	}
 
 	//Did user request to be logged out?
-	public function didLogout() {
+	public function didLogout()
+    {
 		if (isset($_GET['action']) && $_GET['action'] == 'logout') {
-			$this->cookieService->remove('token');
 			return true;
 		} else {
 			return false;
@@ -97,16 +102,15 @@ class AccountView {
     }
 
 	//Redirect, to get rid of post, changed to work with different pages
-	public function redirect($pageId) {
-
-		//header('Location: ' . $_SERVER['PHP_SELF']);
-
+	public function redirect($pageId)
+    {
         header("Location:$pageId");
 	}
 
 	//Page: login, page for logging in
 	public function login() {
-		$username = $this->cookieService->load('username'); //username || ''
+
+		$username = $this->cookieService->load('inputUsername');
 
 		$body = "
 				<h1>L2 - Login [kl222jy]</h1>
@@ -129,8 +133,10 @@ class AccountView {
 	}
 
 	//Page: logged in, page for logged in user
-	public function loggedIn() {
-		$username = $this->cookieService->load('username');
+	public function loggedIn()
+    {
+		$username = $this->cookieService->load('inputUsername');
+
 		if (!$username) {
 			$username = $this->model->getUsername();
 		}
@@ -142,4 +148,32 @@ class AccountView {
 		
 		return $body;
 	}
+
+    public function createCookies($username, $tokenPass)
+    {
+        $time = time()+60;
+
+        setcookie("username", $username, $time);
+        setcookie("tokenpass", $tokenPass, $time);
+
+        return $time;
+    }
+
+    public function deleteCookies()
+    {
+        setcookie("username", "", time()-1);
+        setcookie("tokenpass","", time()-1);
+    }
+
+    public function cookiesExist()
+    {
+        if(isset($_COOKIE['username']) === true && isset($_COOKIE["tokenpass"]) === true)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
 }
