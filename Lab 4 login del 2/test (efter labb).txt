@@ -1,1 +1,1 @@
-Alla test gick igenom på webhotellet.
+Alla test gick igenom pÃ¥ webhotellet. (och lokalt)
