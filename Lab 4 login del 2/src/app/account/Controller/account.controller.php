@@ -17,13 +17,14 @@ class AccountController {
         $this->registerView = $registerView;
 	}
 
+    //Create new cookies on login with cookies
     public function refreshCookies($username)
     {
         $expiration = $this->view->createCookies($username, $this->model->getToken());
         $this->model->rememberUser($expiration, $username);
     }
 
-	//validate login
+	//Try to login with provided credentials
 	private function validateLogin()
     {
 		$username = $this->view->getUsername();
@@ -51,48 +52,51 @@ class AccountController {
 
 	public function index()
     {
-
         //Is user already logged in? (session)
         if ($this->model->isLoggedIn($this->view->getUserAgent(), $this->view->getUserIp()))
         {
-            //Did user click logout?
+            //Did user want to logout?
             if ($this->view->didLogout())
             {
-
                 //Log user out
                 $this->model->logOut();
 
+                //If there are cookies present, delete them
                 if($this->view->cookiesExist())
                 {
                     $this->view->deleteCookies();
                 }
 
+                //Show login screen
                 return $this->view->login();
             }
             else
             {
+                //Else show logged in page
                 return $this->view->loggedIn();
             }
         }
         else
         {
+            //If there are cookies, try to login with them
             if($this->view->cookiesExist())
             {
                 if($this->model->loginWithCookies($this->view->getUsernameCookie(), $this->view->getTokenPassCookie(),
                     $this->view->getUserIP(), $this->view->getUserAgent()))
                 {
-                    //view logged in with success cookie message
+                    //Refresh cookies and view logged in page
                     $this->refreshCookies($this->view->getUsernameCookie());
                     return $this->view->loggedIn();
                 }
                 else
                 {
+                    //If something is wrong with the cookies, delete them
                     $this->view->deleteCookies();
                     return $this->view->login();
                 }
             }
 
-            //Did user click login?
+            //Did user want to login?
             if ($this->view->didLogin())
             {
                 //Get rid of post request
@@ -102,12 +106,11 @@ class AccountController {
                 if ($this->validateLogin())
                 {
                     //Show logged in page
-
                     return $this->view->loggedIn();
                 }
             }
 
-            //Did use press register
+            //Did user want to register
             if($this->registerView->didRegister())
             {
                 $username = $this->registerView->getUsername();

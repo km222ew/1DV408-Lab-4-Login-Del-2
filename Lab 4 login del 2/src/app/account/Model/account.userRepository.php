@@ -16,20 +16,27 @@ class AccountUserRepository extends AccountRepository
         $this->db = $this->connection();
     }
 
+    //Insert new user into database
     public function addUser(AccountUser $user)
     {
-
+        try
+        {
             $sql = "INSERT INTO $this->dbTable (". self::$username . ", " . self::$password . ") VALUES (?, ?)";
             $params = array($user->getUsername(), $user->getPassword());
 
             $query = $this->db->prepare($sql);
             $query->execute($params);
-
+        }
+        catch(PDOException $e)
+        {
+            die("An error has occurred. Error code 222");
+        }
     }
 
     public function getUserByName($username)
     {
-
+        try
+        {
             $sql = "SELECT * FROM $this->dbTable WHERE " . self::$username . "= ?";
             $params = array($username);
 
@@ -49,18 +56,27 @@ class AccountUserRepository extends AccountRepository
             }
 
             return null;
-
+        }
+        catch(PDOException $e)
+        {
+            die("An error has occurred. Error code 123");
+        }
     }
 
+    //Updates the stored token and cookie expire time in database
     public function updateUserIdentifier($token, $expire, $username)
     {
-
+        try
+        {
             $sql = "UPDATE $this->dbTable SET ". self::$token . "= ?, " . self::$expire . "= ? WHERE " . self::$username . "= ?";
             $params = array($token, $expire, $username);
 
             $query = $this->db->prepare($sql);
             $query->execute($params);
-
-
+        }
+        catch(PDOException $e)
+        {
+            die("An error has occurred. Error code 355");
+        }
     }
 }

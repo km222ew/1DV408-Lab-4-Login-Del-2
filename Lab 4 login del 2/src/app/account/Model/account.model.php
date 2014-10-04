@@ -29,6 +29,14 @@ class AccountModel {
 		}
 	}
 
+    //Look for user in database
+    public function getUserFromDb($username)
+    {
+        $user = $this->userRep->getUserByName($username);
+
+        return $user;
+    }
+
 	public function logout()
     {
 		session_destroy();
@@ -46,7 +54,7 @@ class AccountModel {
 
 		$username = $_SESSION['username'];
 
-        $user = $this->userRep->getUserByName($username);
+        $user = $this->getUserFromDb($username);
 
         if($user != null && $_SESSION['userAgent'] == $userAgent && $_SESSION['userIp'] == $userIp)
         {
@@ -79,7 +87,7 @@ class AccountModel {
 			return false;
 		}
 
-        $user = $this->userRep->getUserByName($username);
+        $user = $this->getUserFromDb($username);
 
         if($user == null || $password != $user->getPassword())
         {
@@ -103,7 +111,7 @@ class AccountModel {
 
     public function loginWithCookies($usernameCookie, $tokenPassCookie, $userIP, $userAgent)
     {
-        $user = $this->userRep->getUserByName($usernameCookie);
+        $user = $this->getUserFromDb($usernameCookie);
 
         if($user != null && $user->getToken() == $tokenPassCookie && $user->getExpire() > time())
         {

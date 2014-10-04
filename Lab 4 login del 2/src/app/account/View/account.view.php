@@ -5,7 +5,8 @@ class AccountView {
 	private $model;
 	public $cookieService;
 
-    public function __construct(AccountModel $model, CookieService $cookieService) {
+    public function __construct(AccountModel $model, CookieService $cookieService)
+    {
         $this->model = $model;
         $this->cookieService = $cookieService;
     }
@@ -42,7 +43,9 @@ class AccountView {
         {
 			//return $_POST['remember'];
             return true;
-		} else {
+		}
+        else
+        {
 			return false;
 		}
 	}
@@ -60,7 +63,8 @@ class AccountView {
     }
 
 	//Get client browser info
-	public function getUserAgent() {
+	public function getUserAgent()
+    {
 		return $_SERVER['HTTP_USER_AGENT'];
 	}
 
@@ -71,10 +75,14 @@ class AccountView {
     }
 
 	//Did user request login?
-	public function didLogin() {
-		if (isset($_POST['login'])) {
+	public function didLogin()
+    {
+		if (isset($_POST['login']))
+        {
 			return true;
-		} else {
+		}
+        else
+        {
 			return false;
 		}
 	}
@@ -84,7 +92,9 @@ class AccountView {
     {
 		if (isset($_GET['action']) && $_GET['action'] == 'logout') {
 			return true;
-		} else {
+		}
+        else
+        {
 			return false;
 		}
 	}
@@ -108,7 +118,8 @@ class AccountView {
 	}
 
 	//Page: login, page for logging in
-	public function login() {
+	public function login()
+    {
 
 		$username = $this->cookieService->load('inputUsername');
 
@@ -137,7 +148,8 @@ class AccountView {
     {
 		$username = $this->cookieService->load('inputUsername');
 
-		if (!$username) {
+		if (!$username)
+        {
 			$username = $this->model->getUsername();
 		}
 

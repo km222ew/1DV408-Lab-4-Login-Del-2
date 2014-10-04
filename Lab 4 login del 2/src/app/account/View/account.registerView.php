@@ -56,6 +56,7 @@ class AccountRegisterView
 
         $username = $this->cookieService->load('inputUsername');
 
+        //Replaces all invalid characters with '' and puts the remainder in input
         $username = preg_replace('/[^a-zåäöA-ZÅÄÖ0-9]/', '', $username);
 
         $body = "

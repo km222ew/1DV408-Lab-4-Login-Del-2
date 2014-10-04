@@ -13,9 +13,9 @@ class AccountRegisterModel
         //Notifications notify->success/error/info(message, optional header)
         $this->notify = $notify;
         $this->userRep = new AccountUserRepository();
-
     }
 
+    //Make sure provided credentials are valid for registration
     public function validateRegister($username, $password, $repPassword)
     {
         $validChars = '/[^a-zåäöA-ZÅÄÖ0-9]/';
